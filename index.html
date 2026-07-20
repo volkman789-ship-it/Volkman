@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Mission for You ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&family=Mitr:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #feada6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 10px;
+            color: #4a4a4a;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas FX Behind */
+        #bgCanvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 1;
+        }
+
+        .container {
+            width: 100%; max-width: 450px; background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px);
+            border-radius: 28px; padding: 28px 22px; box-shadow: 0 20px 45px rgba(230, 80, 115, 0.3); text-align: center;
+            position: relative; z-index: 10; border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        h1, h2, h3 { font-family: 'Mitr', sans-serif; color: #ff477e; margin-bottom: 12px; }
+        p { font-size: 1rem; line-height: 1.6; color: #555; margin-bottom: 15px; }
+
+        .btn {
+            background: linear-gradient(45deg, #ff477e, #ff70a6); color: white; border: none; padding: 14px 28px;
+            font-size: 1.05rem; font-weight: 600; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 8px 18px rgba(255, 71, 126, 0.35); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 10px; width: 100%;
+        }
+        .btn:hover { transform: translateY(-2px) scale(1.02); }
+        .btn:active { transform: scale(0.96); }
+
+        .screen { display: none; }
+        .screen.active { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        /* Score Tag */
+        .score-tag {
+            background: #ffe3e8; color: #ff477e; padding: 6px 18px; border-radius: 20px; font-weight: bold;
+            display: inline-block; margin-bottom: 15px; border: 1.5px dashed #ff70a6;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        /* Quiz options */
+        .quiz-options { display: flex; flex-direction: column; gap: 12px; margin: 15px 0; }
+        .option-btn {
+            background: #fff0f5; border: 2px solid #ffccd5; padding: 14px; border-radius: 18px;
+            font-size: 0.98rem; font-weight: 500; color: #ff3366; cursor: pointer; text-align: left;
+            transition: all 0.2s; position: relative; overflow: hidden;
+        }
+        .option-btn:hover { background: #ffccd5; transform: translateX(5px); }
+
+        /* Radar Scanning FX */
+        .radar-box {
+            width: 120px; height: 120px; border-radius: 50%; border: 3px solid #ff70a6;
+            margin: 20px auto; position: relative; display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle, #ffe3e8 0%, #fff 100%);
+        }
+        .radar-sweep {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            border-top: 3px solid #ff477e; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Progress Bar */
+        .progress-box { background: #eee; border-radius: 12px; height: 18px; overflow: hidden; margin: 15px 0; }
+        .progress-bar { background: linear-gradient(90deg, #ff70a6, #ff477e); height: 100%; width: 0%; transition: width 0.6s ease; }
+
+        /* Order Card */
+        .order-card {
+            background: #fdf2f4; border: 2px dashed #ffb3c1; border-radius: 18px; padding: 16px;
+            text-align: left; margin: 15px 0; font-size: 0.95rem; box-shadow: inset 0 0 10px rgba(255, 71, 126, 0.05);
+        }
+
+        /* Photo Frame */
+        .photo-frame {
+            width: 100%; max-width: 240px; height: 240px; border-radius: 22px; border: 4px solid #ff70a6;
+            margin: 15px auto; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            background: #ffe3e8; color: #ff477e; font-weight: bold; box-shadow: 0 10px 20px rgba(255, 71, 126, 0.2);
+        }
+        .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+        .love-text { text-align: left; background: #fff0f3; padding: 18px; border-radius: 18px; font-size: 0.95rem; line-height: 1.7; white-space: pre-line; border: 1px solid #ffccd5; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="container">
+
+        <!-- Screen 1: Welcome -->
+        <div id="screen-1" class="screen active">
+            <h1>🎮 Welcome อ้วน</h1>
+            <p>มีภารกิจเล็ก ๆ ให้เล่นก่อนนะ<br>เล่นให้จบ แล้วจะมีอะไรบางอย่างรออยู่</p>
+            <div class="score-tag">คะแนน: <span id="score">0</span>/100</div>
+            <button class="btn" onclick="playPopSound(); nextScreen('screen-2')">[เริ่มเกม]</button>
+        </div>
+
+        <!-- Screen 2: Quiz -->
+        <div id="screen-2" class="screen">
+            <h3>🕹️ ภารกิจพิเศษ</h3>
+            <p id="q-title" style="color:#ff70a6; font-weight:bold;">คำถามที่ 1</p>
+            <h2 id="q-text" style="font-size: 1.15rem; margin-bottom: 10px;">คนไหนน่ารักที่สุด?</h2>
+            <div class="quiz-options" id="quiz-options"></div>
+        </div>
+
+        <!-- Screen 3: Completed Quiz -->
+        <div id="screen-3" class="screen">
+            <h2>🎉 ตอบครบแล้ว</h2>
+            <p>ผ่านภารกิจแล้ว<br>กำลังปลดล็อกของบางอย่าง…</p>
+            <div class="score-tag">คะแนน: 100/100</div>
+            <button class="btn" onclick="playPopSound(); nextScreen('screen-4')">ถัดไป ➔</button>
+        </div>
+
+        <!-- Screen 4: New Notification -->
+        <div id="screen-4" class="screen">
+            <h2>💬 แจ้งเตือนใหม่</h2>
+            <p style="font-size: 1.2rem; margin: 25px 0; color: #ff477e; font-weight:600;">มีคำสั่งซื้อเข้ามา 1 รายการ</p>
+            <button class="btn" onclick="playPopSound(); nextScreen('screen-5')">[กดดูรายละเอียด]</button>
+        </div>
+
+        <!-- Screen 5: Order Details -->
+        <div id="screen-5" class="screen">
+            <h2>🛒 รายละเอียดคำสั่งซื้อ</h2>
+            <div class="order-card">
+                <div><b>สินค้า:</b> ลองกดดูละกัน ไม่รู้เป็นอะไร</div>
+                <div style="margin-top:6px;"><b>สถานะ:</b> <span style="color:#ff477e;">กำลังจัดส่ง…</span></div>
+                <div style="margin-top:6px;"><b>ผู้รับ:</b> มะเดิ้นแก้มมู่ตู้สุดแก้มบรมมะอ้วน</div>
+            </div>
+            <button class="btn" onclick="playPopSound(); startTracking()">[ติดตามพัสดุ]</button>
+        </div>
+
+        <!-- Screen 6: Tracking Progress Radar -->
+        <div id="screen-6" class="screen">
+            <h2>🚚 ติดตามพัสดุ</h2>
+            <p>กำลังตรวจสอบตำแหน่ง…</p>
+            <div class="radar-box">
+                <div class="radar-sweep"></div>
+                <span style="font-size: 2.5rem;">📦</span>
+            </div>
+            <div class="progress-box"><div class="progress-bar" id="p-bar"></div></div>
+            <h1 id="p-text" style="font-size: 2rem;">0%</h1>
+        </div>
+
+        <!-- Screen 7: Delivery Success -->
+        <div id="screen-7" class="screen">
+            <h2>🎉 จัดส่งสำเร็จแล้ว!</h2>
+            <div class="order-card" style="background: #fff0f3; text-align:center;">
+                <div style="color: #ff477e; font-weight: bold; font-size: 1.1rem;">📍 ตำแหน่งพัสดุ:</div>
+                <div style="font-size: 1.05rem; margin: 8px 0;">👜 อยู่ในกระเป๋าของมะเดิ้นน้อย ❤️</div>
+                <hr style="border: 0.5px dashed #ffb3c1; margin: 12px 0;">
+                <div style="color: #ff477e; font-weight: bold;">🔎 จุดค้นหา:</div>
+                <div style="margin-top:4px;">• กระเป๋าใบใหญ่</div>
+                <div>• ช่องเล็ก ๆ ที่มีซิป</div>
+            </div>
+            <p style="color: #ff477e; font-weight: bold; font-size: 1.1rem;">ลองเปิดดูนะ ❤️</p>
+            <button class="btn" onclick="playTadaSound(); fireConfetti(); nextScreen('screen-8')">เปิดของขวัญแล้วกดตรงนี้ต่อ ✨</button>
+        </div>
+
+        <!-- Screen 8: Ending & Wishes -->
+        <div id="screen-8" class="screen">
+            <h2>❤️ ตอนจบ</h2>
+            <div class="photo-frame">
+                <img src="picture.jpg" alt="รูปคู่" onerror="this.parentElement.innerHTML='📸 (ใส่รูปคู่ตรงนี้)'">
+            </div>
+
+            <div class="love-text">
+<b>สุขสันต์วันเกิดนะอ้วน ❤️</b>
+
+ขอให้อ้วนมีความสุขมาก ๆ นะ
+ขอบคุณที่อยู่ด้วยกันมาตลอด
+
+รู้ว่าอาจไม่ได้ทำอะไรยิ่งใหญ่มาก
+แต่อยากให้อ้วนรู้ว่าตั้งใจทำให้จริง ๆ
+
+หวังว่าจะทำให้อ้วนยิ้มได้นะ
+
+รักนะที่รัก ❤️
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    // Audio Synth Engine (Sound Effects Without Loading Files)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playPopSound() {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playTadaSound() {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime + idx * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.1 + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + idx * 0.1);
+            osc.stop(audioCtx.currentTime + idx * 0.1 + 0.3);
+        });
+    }
+
+    // Floating Background Particle FX
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for(let i=0; i<30; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 12 + 8,
+            speedY: Math.random() * 1 + 0.5,
+            symbol: ['❤️', '💖', '✨', '🌸'][Math.floor(Math.random()*4)]
+        });
+    }
+
+    function drawParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.y -= p.speedY;
+            if(p.y < -20) p.y = canvas.height + 20;
+            ctx.font = `${p.size}px sans-serif`;
+            ctx.fillText(p.symbol, p.x, p.y);
+        });
+        requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+
+    // Screen Control
+    function nextScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    // Quiz Data
+    const quizData = [
+        {
+            title: "คำถามที่ 1",
+            q: "คนไหนน่ารักที่สุด?",
+            options: ["มะเดิ้นน้อย", "ไอ้อ้วนสุดมู่ตู้พลังหมูสามชั้นสุดขี้เซา"],
+            score: 35
+        },
+        {
+            title: "คำถามที่ 2",
+            q: "ถ้ามีของขวัญอยู่ตรงหน้า มะเดิ้นน้อยจะเลือกทำอะไร?",
+            options: ["เปิดดู", "เก็บไว้ก่อน", "เควี้ยงทิ้ง"],
+            score: 70
+        },
+        {
+            title: "คำถามที่ 3",
+            q: "สิ่งที่อยากให้มะเดิ้นน้อยได้มากที่สุดคืออะไร?",
+            options: ["รอยยิ้ม", "ความสุข", "ทั้งสองอย่าง"],
+            score: 100
+        }
+    ];
+
+    let currentQ = 0;
+    function loadQuestion() {
+        if(currentQ >= quizData.length) {
+            fireConfetti();
+            nextScreen('screen-3');
+            return;
+        }
+        const data = quizData[currentQ];
+        document.getElementById('q-title').innerText = data.title;
+        document.getElementById('q-text').innerText = data.q;
+        
+        const container = document.getElementById('quiz-options');
+        container.innerHTML = '';
+        data.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = '○ ' + opt;
+            btn.onclick = () => {
+                playPopSound();
+                document.getElementById('score').innerText = data.score;
+                currentQ++;
+                loadQuestion();
+            };
+            container.appendChild(btn);
+        });
+    }
+    loadQuestion();
+
+    // Tracking Progress FX
+    function startTracking() {
+        nextScreen('screen-6');
+        const pBar = document.getElementById('p-bar');
+        const pText = document.getElementById('p-text');
+        
+        setTimeout(() => { pBar.style.width = '10%'; pText.innerText = '10%'; playPopSound(); }, 600);
+        setTimeout(() => { pBar.style.width = '50%'; pText.innerText = '50%'; playPopSound(); }, 1600);
+        setTimeout(() => { pBar.style.width = '100%'; pText.innerText = '100%'; playPopSound(); }, 2600);
+        
+        setTimeout(() => {
+            playTadaSound();
+            fireConfetti();
+            nextScreen('screen-7');
+        }, 3400);
+    }
+
+    // Fireworks Confetti FX
+    function fireConfetti() {
+        confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ff477e', '#ff70a6', '#ffccd5', '#ffffff']
+        });
+    }
+</script>
+</body>
+</html>
